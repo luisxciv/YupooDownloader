@@ -8,7 +8,7 @@ Ensure you have python 3.6+ installed.
 pip install -r requirements.txt
 
 ```
-## enter your yupoo URL's into the JSON file. You can download the entire yupoo, categories or pages by using the specific URL.
+## The script will download all the albums in the current page, you can add multiple pages as an array in the JSON file: .
 
 details.json
 
