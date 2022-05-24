@@ -55,7 +55,7 @@ getAlbumURLS()
 @retry(stop_max_attempt_number=5)
 def createHandler(X):
     try:
-        with open((str(X) + 'handler.csv'), 'w', newline='') as file:
+        with open((str(X) + '.csv'), 'w', newline='') as file:
             writer = csv.writer(file, delimiter=',')
             #WINDOWS DIRECTORY READING FROM ORIGINAL REPO
             #df = pd.read_csv(os.getcwd() + "\\bf3_strona.csv", sep=' ')
@@ -94,8 +94,8 @@ def createHandler(X):
 def imageDownloader(x):
     try:
         def create_directory(directory):
-            if not os.path.exists(directory):
-                os.makedirs(directory)
+            if not os.path.exists('dump/' + directory):
+                os.makedirs('dump/' + directory)
 
         def download_save(url, folder):
             try:
@@ -104,14 +104,14 @@ def imageDownloader(x):
                 c.get('https://photo.yupoo.com/')
                 c.headers.update({'referer': 'https://photo.yupoo.com/'})
                 res = c.get(url, timeout=None)
-                with open(f'{folder}/{url.split("/")[-2]}.jpg', 'wb') as f:
+                with open(f'./dump/{folder}/{url.split("/")[-2]}.jpg', 'wb') as f:
                     f.write(res.content)
             except:
                 pass
         #WINDOWS
         #file = pd.read_csv(os.getcwd() + '\\' + str(x) + "TESTY.csv")
         #UNIX
-        file = pd.read_csv('./' + str(x) + "handler.csv")
+        file = pd.read_csv('./' + str(x) + ".csv")
         count = 0
         try:
             for col in file.columns:
@@ -127,11 +127,11 @@ def imageDownloader(x):
             pass
         try:
             #path = (os.getcwd() + '\\' + col)
-            path = ('./' + col)
+            path = ('./dump/' + col)
 
             files = os.listdir(path)
             for index, file in enumerate(files):
-                os.rename(os.path.join(path, file), os.path.join(path, ''.join([str(index), 'big.jpg'])))
+                os.rename(os.path.join(path, file), os.path.join(path, ''.join([str(index), '_big.jpg'])))
         except:
             pass
 
@@ -142,6 +142,6 @@ def imageDownloader(x):
 for x in range(int(state['productCount'])):
     createHandler(x)
     imageDownloader(x)
-    os.remove(str(x) + 'handler.csv')
+    os.remove(str(x) + '.csv')
 
 
