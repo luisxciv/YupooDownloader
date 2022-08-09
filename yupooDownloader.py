@@ -1,6 +1,7 @@
 # coding=utf-8
 
 from ctypes.wintypes import PINT
+from pydoc import pager
 from retrying import retry
 import pandas as pd
 import os
@@ -49,8 +50,6 @@ def getAlbumURLS():
     print("File with album URLS located in: " + os.getcwd())
     print("Downloading images...")
 
-getAlbumURLS()
-
 
 @retry(stop_max_attempt_number=5)
 def createHandler(X):
@@ -61,32 +60,37 @@ def createHandler(X):
             #df = pd.read_csv(os.getcwd() + "\\bf3_strona.csv", sep=' ')
             #WORKING DIR REF IN UNIX SYSTEMS
             df = pd.read_csv('./albumURLs.csv')
-            TEXT = (df['LINKS'][X])
+            TEXT = (df['LINKS'][X]) #Links
 
-            url = state['yupoo_link']
+            url = state['yupoo_link'] 
             text = url
             head, sep, tail = text.partition('x.yupoo.com')
             url = head + "x.yupoo.com" + TEXT
-
+            
             print(url)
-
+            
             response = requests.get(url, timeout=None)
             data = response.content
             soup = BeautifulSoup(data, 'lxml')
-            search = soup.select('.image__landscape')
-            title = soup.find_all("h2")[0].get_text()
 
-           # writer.writerow([X])
-            writer.writerow([title])
+            pages = soup.find("form", {"class": "pagination__jumpwrap"})
+            nb_pages = int(pages.findChildren()[2].findChildren()[0].get('max')) 
+            
+            for i in range(nb_pages):
+                print('Page = ', i+1)
+                response = requests.get(url+'&page='+str(i+1), timeout=None)
+                data = response.content
+                soup = BeautifulSoup(data, 'lxml')
+                title = soup.find_all("h2")[0].get_text()
 
-            for x in search:
-                q = x['data-src']
-                writer.writerow(['https:' + q])
-            search = soup.select('.image__portrait')
-            for x in search:
-                q = x['data-src']
-                writer.writerow(['https:' + q])
-    except :
+                # writer.writerow([X])
+                writer.writerow([title])
+
+                imgs = soup.find_all("div", {"class": "image__imagewrap"})
+                for img in imgs:
+                    q = img.findChildren()[0].get('data-src')
+                    writer.writerow(['https:' + q])
+    except : 
         #print("passing")
         pass
 
@@ -97,15 +101,15 @@ def imageDownloader(x):
             if not os.path.exists('dump/' + directory):
                 os.makedirs('dump/' + directory)
 
-        def download_save(url, folder):
+        def download_save(url, folder, z):
             try:
                 create_directory(folder)
                 c = requests.Session()
                 c.get('https://photo.yupoo.com/')
                 c.headers.update({'referer': 'https://photo.yupoo.com/'})
                 res = c.get(url, timeout=None)
-                with open(f'./dump/{folder}/{url.split("/")[-2]}.jpg', 'wb') as f:
-                    f.write(res.content)
+                with open(f'./dump/{folder}/'+str(z)+'.jpg', 'wb') as f:
+                    f.write(res.content) 
             except:
                 pass
         #WINDOWS
@@ -119,7 +123,7 @@ def imageDownloader(x):
                 for url in file[col].tolist():
                     count += 1
                     if str(url).startswith("http"):
-                        download_save(url, col)
+                        download_save(url, col, count)
                         count
 
                 print("Downloaded " + str(count) + " images.")
@@ -139,9 +143,9 @@ def imageDownloader(x):
         pass
 
 
+getAlbumURLS()
+
 for x in range(int(state['productCount'])):
     createHandler(x)
     imageDownloader(x)
     os.remove(str(x) + '.csv')
-
-
